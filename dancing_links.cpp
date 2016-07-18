@@ -1,9 +1,16 @@
 
 #include <iostream>
+#include <fstream>
 #include <list>
 #include <vector>
 
 using namespace std;
+
+const char header_file[] = "digraph g {\n"
+                           "graph [ rankdir = \"TB\" ];\n"
+                           "node  [ fontsize = \"16\" shape = \"record\" ];\n"
+                           "edge [ ];\n";
+const char footer_file[] = "}\n";
 
 class Cell
 {
@@ -199,21 +206,63 @@ static bool solve(Cell &header, list<uint32_t> *sol)
     return false;
 }
 
-void print_header(Cell &header)
+void print_header(Cell &header, char *filename)
 {
-    Cell *pHCell = header.R;
-    Cell *pVCell = pHCell->D;
-    
-    while( pHCell != &header )
+    ofstream file(filename, ofstream::out);
+
+    if(file)
     {
-        pHCell->print();
-        pVCell = pHCell->D;
-        while( pVCell != pHCell )
+        file << header_file;
+
+        Cell *pHCell = &header;
+        Cell *pVCell = pHCell->D;
+    
+        file << "{ rank = same; ";
+        do
         {
-            pVCell->print();
-            pVCell = pVCell->D;
+            file << " \"" << pHCell << "\";";
+            pHCell = pHCell->R;
         }
-        pHCell = pHCell->R;
+        while( pHCell != &header );
+        file << " }" << endl;
+
+        pHCell = header.R;
+        pVCell = pHCell->D;
+
+        file << "\"" << &header << "\" [ label = \"<f0> "  << &header <<"\" shape = \"record\" ];" << endl;
+        file << "\"" << &header << "\" -> \"" << header.U << "\" [color = green]" << endl;
+        file << "\"" << &header << "\" -> \"" << header.D << "\" [color = cyan]" << endl;
+        file << "\"" << &header << "\" -> \"" << header.L << "\" [color = blue]" << endl;
+        file << "\"" << &header << "\" -> \"" << header.R << "\" [color = red]" << endl;
+    
+        while( pHCell != &header )
+        {
+            file << "\"" << pHCell << "\" [ label = \"<f0> "  << pHCell <<"\" shape = \"record\" ];" << endl;
+            file << "\"" << pHCell << "\" -> \"" << pHCell->U << "\" [color = green]" << endl;
+            file << "\"" << pHCell << "\" -> \"" << pHCell->D << "\" [color = cyan]" << endl;
+            file << "\"" << pHCell << "\" -> \"" << pHCell->L << "\" [color = blue]" << endl;
+            file << "\"" << pHCell << "\" -> \"" << pHCell->R << "\" [color = red]" << endl;
+
+            pVCell = pHCell->D;
+            while( pVCell != pHCell )
+            {
+                file << "\"" << pVCell << "\" [ label = \"<f0> "  << pVCell <<"\" shape = \"record\" ];" << endl;
+                file << "\"" << pVCell << "\" -> \"" << pVCell->U << "\" [color = green]" << endl;
+                file << "\"" << pVCell << "\" -> \"" << pVCell->D << "\" [color = cyan]" << endl;
+                file << "\"" << pVCell << "\" -> \"" << pVCell->L << "\" [color = blue]" << endl;
+                file << "\"" << pVCell << "\" -> \"" << pVCell->R << "\" [color = red]" << endl;
+                pVCell = pVCell->D;
+            }
+            pHCell = pHCell->R;
+        }
+
+        file << footer_file;
+
+        file.close();
+    }
+    else
+    {
+        cout << "Erreur fichier" << endl;
     }
 }
 
@@ -239,8 +288,6 @@ list<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> 
         }
     }
     list<uint32_t> *sol = new list<uint32_t>;
-
-    print_header(header);
 
     if( solve(header, sol) )
         return sol;
