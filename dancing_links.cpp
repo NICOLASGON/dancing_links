@@ -68,6 +68,16 @@ class Cell
             this->R->L = this;
             this->L->R = this;
         }
+
+        void print(void)
+        {
+            cout << this << ";";
+            cout << this->U << ";";
+            cout << this->D << ";";
+            cout << this->L << ";";
+            cout << this->R << ";";
+            cout << this->S << endl;
+        }
 };
 
 // Couvrir une colonne consiste à temporairement enlever cette colonne de 
@@ -189,6 +199,24 @@ static bool solve(Cell &header, list<uint32_t> *sol)
     return false;
 }
 
+void print_header(Cell &header)
+{
+    Cell *pHCell = header.R;
+    Cell *pVCell = pHCell->D;
+    
+    while( pHCell != &header )
+    {
+        pHCell->print();
+        pVCell = pHCell->D;
+        while( pVCell != pHCell )
+        {
+            pVCell->print();
+            pVCell = pVCell->D;
+        }
+        pHCell = pHCell->R;
+    }
+}
+
 // Fonction qui met en forme le problème et le résouds.
 // Cette fonction retourne une liste de set ou NULL si il n'y a pas de solution.
 list<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> &sets)
@@ -211,6 +239,9 @@ list<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> 
         }
     }
     list<uint32_t> *sol = new list<uint32_t>;
+
+    print_header(header);
+
     if( solve(header, sol) )
         return sol;
     else
