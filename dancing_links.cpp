@@ -75,16 +75,6 @@ class Cell
             this->R->L = this;
             this->L->R = this;
         }
-
-        void print(void)
-        {
-            cout << this << ";";
-            cout << this->U << ";";
-            cout << this->D << ";";
-            cout << this->L << ";";
-            cout << this->R << ";";
-            cout << this->S << endl;
-        }
 };
 
 // Couvrir une colonne consiste à temporairement enlever cette colonne de 
@@ -149,7 +139,7 @@ void uncover(Cell *c)
 // retournant false ce qui signifie aux instances du dessus que 
 // cette solution est une impasse et ils font marche arrière en 
 // testant les autres entrées de la colonne.
-static bool solve(Cell &header, list<uint32_t> *sol)
+static bool solve(Cell &header, vector<uint32_t> *sol)
 {
     // Si toutes les colonnes on été choisies c'est
     // que nous avons trouvé une solution.
@@ -204,6 +194,39 @@ static bool solve(Cell &header, list<uint32_t> *sol)
     //////////////////////////////////////
 
     return false;
+}
+
+// Fonction qui met en forme le problème et le résouds.
+// Cette fonction retourne une liste de set ou NULL si il n'y a pas de solution.
+vector<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> &sets)
+{
+    uint32_t i = 0, j = 0;
+    Cell header = Cell(NULL, NULL, 0, NULL);
+    vector<Cell*> col;
+    bool IsASolution = false;
+    
+    for(j=0; j<size_universe; j++)
+    {
+        Cell *pCell = new Cell(&header, NULL, 0, NULL);
+        col.push_back(pCell);
+    }
+    for(i=0; i<sets.size(); i++)
+    {
+        Cell *row = NULL;
+        for(j=0; j<sets[i].size(); j++)
+        {
+            col[sets[i][j]]->S += 1;
+            row = new Cell(row, col[sets[i][j]], i, col[sets[i][j]]);
+        }
+    }
+    vector<uint32_t> *sol = new vector<uint32_t>;
+
+    IsASolution = solve(header, sol);
+
+    if( IsASolution )
+        return sol;
+    else
+        return NULL;
 }
 
 void print_header(Cell &header, char *filename)
@@ -266,38 +289,10 @@ void print_header(Cell &header, char *filename)
     }
 }
 
-// Fonction qui met en forme le problème et le résouds.
-// Cette fonction retourne une liste de set ou NULL si il n'y a pas de solution.
-list<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> &sets)
-{
-    uint32_t i = 0, j = 0;
-    Cell header = Cell(NULL, NULL, 0, NULL);
-    vector<Cell*> col;
-    for(j=0; j<size_universe; j++)
-    {
-        Cell *pCell = new Cell(&header, NULL, 0, NULL);
-        col.push_back(pCell);
-    }
-    for(i=0; i<sets.size(); i++)
-    {
-        Cell *row = NULL;
-        for(j=0; j<sets[i].size(); j++)
-        {
-            col[sets[i][j]]->S += 1;
-            row = new Cell(row, col[sets[i][j]], i, col[sets[i][j]]);
-        }
-    }
-    list<uint32_t> *sol = new list<uint32_t>;
-
-    if( solve(header, sol) )
-        return sol;
-    else
-        return NULL;
-}
-
 // Programme d'exemple
 int main(void)
 {
+    uint32_t i = 0;
     vector<vector<uint32_t>> sets = {
         {2,4,5},
         {0,3,6},
@@ -307,16 +302,16 @@ int main(void)
         {3,4,6}
     };
     
-    list<uint32_t> *sol = dancing_links(7, sets);
+    vector<uint32_t> *sol = dancing_links(7, sets);
 
     if( sol )
     {
         cout << sol->size() << " sets" << endl;
-        while( sol->size() )
+        for(i=0; i < sol->size(); i++ )
         {
-            cout << sol->front() << endl;
-            sol->pop_front();
+            cout << (*sol)[i] << endl;
         }
+        delete sol;
     }
     else
     {
