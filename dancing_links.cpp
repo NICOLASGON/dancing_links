@@ -70,7 +70,13 @@ class Cell
         }
 };
 
-
+// Couvrir une colonne consiste à temporairement enlever cette colonne de 
+// la liste chaînée des colonnes, et pour chaque case de la colonne 
+// retirer les autres cellules qui sont sur la même ligne.
+//
+// Cette manoeuvre signifie que l'on a choisit un set dans cette colonne.
+// Les autres sets qui inclus cette colonnes ne peuvent pas être choisis
+// ainsi que tous les élements de ces sets donc on retire tout temporairement.
 void cover(Cell *c)
 {
     c->hide_horiz();
@@ -89,6 +95,9 @@ void cover(Cell *c)
     }
 }
 
+// Cette opération est le dual de la fonction cover et permet de tout remettre
+// en place de façon à annuler la suppresion. C'est ce mécanisme qui permet de
+// faire du backtracking.
 void uncover(Cell *c)
 {
     Cell *pVCell = c->U;
@@ -107,8 +116,28 @@ void uncover(Cell *c)
     c->unhide_horiz();
 }
 
+// La recherche de la solution est une méthode récursive via
+// backtracking. Cette fonction est symetrique, elle sélectionne
+// la colonne la plus contrainte <=> avec le moins d'élements dans
+// le colonne. Elle va parcourir cette colonne de haut en bas en
+// sélectionnant l'entrée et en couvrant la colonne ce qui revient
+// à créer une nouvelle instance du problème.
+// Ce parcours récursif s'arrète quand il reste une colonne qui
+// n'a pas été choisie mais qui est vide.
+// Celà signifie que les choix que l'on a fait précédement nous 
+// ont ammené dans une impasse car une solution à ce problème se
+// doit d'avoir un ensemble de sets qui couvre toutes les colonnes.
+// Au moment où l'on détecte une impasse comme la colonne est vide 
+// l'algorithme ne rentre pas dans le while et sort directement en
+// retournant false ce qui signifie aux instances du dessus que 
+// cette solution est une impasse et ils font marche arrière en 
+// testant les autres entrées de la colonne.
 static bool solve(Cell &header, list<uint32_t> *sol)
 {
+    // Si toutes les colonnes on été choisies c'est
+    // que nous avons trouvé une solution.
+    // On retourne true afin de terminer toutes les 
+    // instances du dessus.
     if( header.R == &header )
         return true;
 
@@ -124,6 +153,7 @@ static bool solve(Cell &header, list<uint32_t> *sol)
         pHCell = pHCell->R;
     }
 
+    //////////////////////////////////////
     cover(c);
     Cell *pVCell = c->D;
     while( pVCell != c )
@@ -154,10 +184,13 @@ static bool solve(Cell &header, list<uint32_t> *sol)
         //////////////////////////////////////
     }
     uncover(c);
+    //////////////////////////////////////
 
     return false;
 }
 
+// Fonction qui met en forme le problème et le résouds.
+// Cette fonction retourne une liste de set ou NULL si il n'y a pas de solution.
 list<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> &sets)
 {
     uint32_t i = 0, j = 0;
@@ -184,6 +217,7 @@ list<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> 
         return NULL;
 }
 
+// Programme d'exemple
 int main(void)
 {
     vector<vector<uint32_t>> sets = {
