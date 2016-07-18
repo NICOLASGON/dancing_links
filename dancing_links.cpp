@@ -3,6 +3,7 @@
 #include <fstream>
 #include <list>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -196,40 +197,7 @@ static bool solve(Cell &header, vector<uint32_t> *sol)
     return false;
 }
 
-// Fonction qui met en forme le problème et le résouds.
-// Cette fonction retourne une liste de set ou NULL si il n'y a pas de solution.
-vector<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> &sets)
-{
-    uint32_t i = 0, j = 0;
-    Cell header = Cell(NULL, NULL, 0, NULL);
-    vector<Cell*> col;
-    bool IsASolution = false;
-    
-    for(j=0; j<size_universe; j++)
-    {
-        Cell *pCell = new Cell(&header, NULL, 0, NULL);
-        col.push_back(pCell);
-    }
-    for(i=0; i<sets.size(); i++)
-    {
-        Cell *row = NULL;
-        for(j=0; j<sets[i].size(); j++)
-        {
-            col[sets[i][j]]->S += 1;
-            row = new Cell(row, col[sets[i][j]], i, col[sets[i][j]]);
-        }
-    }
-    vector<uint32_t> *sol = new vector<uint32_t>;
-
-    IsASolution = solve(header, sol);
-
-    if( IsASolution )
-        return sol;
-    else
-        return NULL;
-}
-
-void print_header(Cell &header, char *filename)
+void print_header(Cell &header, string filename)
 {
     ofstream file(filename, ofstream::out);
 
@@ -287,6 +255,54 @@ void print_header(Cell &header, char *filename)
     {
         cout << "Erreur fichier" << endl;
     }
+}
+
+// Fonction qui met en forme le problème et le résouds.
+// Cette fonction retourne une liste de set ou NULL si il n'y a pas de solution.
+vector<uint32_t> * dancing_links(uint32_t size_universe, vector<vector<uint32_t>> &sets)
+{
+    uint32_t i = 0, j = 0;
+    bool IsASolution = false;
+    list<Cell*> lCell;
+    Cell *pCell = NULL;
+
+    // Allocation des colonnes
+    vector<Cell*> col;
+    Cell header = Cell(NULL, NULL, 0, NULL);
+    for(j=0; j<size_universe; j++)
+    {
+        pCell = new Cell(&header, NULL, 0, NULL);
+        col.push_back(pCell);
+        lCell.push_back(pCell);
+    }
+
+    // Allocation des cellules
+    for(i=0; i<sets.size(); i++)
+    {
+        Cell *row = NULL;
+        for(j=0; j<sets[i].size(); j++)
+        {
+            col[sets[i][j]]->S += 1;
+            row = new Cell(row, col[sets[i][j]], i, col[sets[i][j]]);
+            lCell.push_back(row);
+        }
+    }
+    
+    vector<uint32_t> *sol = new vector<uint32_t>;
+
+    print_header(header, "01.dot");
+
+    // Résolution du problème
+    IsASolution = solve(header, sol);
+
+    // Libère toute les cellules allouées
+    for(list<Cell*>::iterator it = lCell.begin(); it != lCell.end(); ++it)
+        delete *it;
+
+    if( IsASolution )
+        return sol;
+    else
+        return NULL;
 }
 
 // Programme d'exemple
